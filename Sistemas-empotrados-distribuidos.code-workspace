@@ -1,0 +1,16 @@
+{
+    "folders": [
+        {
+            "path": "teoria"
+        },
+        {
+            "path": "practicas"
+        },
+        {
+            "path": "talleres"
+        },
+        {
+            "path": "."
+        },
+    ]
+}

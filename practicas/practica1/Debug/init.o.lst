@@ -1,0 +1,29 @@
+   1              	# 1 "../init.asm"
+   1              		.global start
+   0              	
+   0              	
+   0              	
+   2              	    .extern Main
+   3              	    .equ STACK, 0x0C7FF000
+   4              	
+   5              	start: 
+   6 0000 0CD09FE5 	    LDR SP,=STACK
+   7 0004 00B0A0E3 	    MOV FP,#0
+   8 0008 0FE0A0E1 	    MOV LR,PC
+   9 000c 04F09FE5 	    LDR PC,=Main
+  10              	End:
+  11              	
+  12 0010 FEFFFFEA 	    B End
+  13              	
+  14 0014 00F07F0C 	.end
+  14      00000000 
+DEFINED SYMBOLS
+         ../init.asm:5      .text:00000000 start
+         ../init.asm:3      *ABS*:0c7ff000 STACK
+         ../init.asm:6      .text:00000000 $a
+         ../init.asm:10     .text:00000010 End
+         ../init.asm:14     .text:00000014 $d
+                   .debug_aranges:0000000c $d
+
+UNDEFINED SYMBOLS
+Main

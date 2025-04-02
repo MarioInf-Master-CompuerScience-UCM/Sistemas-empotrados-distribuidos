@@ -1,0 +1,701 @@
+   1              		.cpu arm7tdmi
+   2              		.fpu softvfp
+   3              		.eabi_attribute 20, 1
+   4              		.eabi_attribute 21, 1
+   5              		.eabi_attribute 23, 3
+   6              		.eabi_attribute 24, 1
+   7              		.eabi_attribute 25, 1
+   8              		.eabi_attribute 26, 1
+   9              		.eabi_attribute 30, 6
+  10              		.eabi_attribute 18, 4
+  11              		.file	"44blib.c"
+  21              	.Ltext0:
+  22              		.file 1 "../commonEclipse/44blib.c"
+ 3128              		.align	2
+ 3131              	mallocPt:
+ 3132 0000 00000000 		.word	Image_RW_Limit
+ 3133              		.global	restart
+ 3134              		.bss
+ 3135              		.align	2
+ 3138              	restart:
+ 3139 0000 00000000 		.space	4
+ 3140              		.global	run
+ 3141              		.data
+ 3142              		.align	2
+ 3145              	run:
+ 3146 0004 0000000C 		.word	201326592
+ 3147              		.align	2
+ 3150              	delayLoopCount:
+ 3151 0008 90010000 		.word	400
+ 3152              		.global	__aeabi_idiv
+ 3153              		.text
+ 3154              		.align	2
+ 3155              		.global	Delay
+ 3157              	Delay:
+ 3158              	.LFB0:
+   1:../commonEclipse/44blib.c **** #include "44b.h"
+   2:../commonEclipse/44blib.c **** #include "44blib.h"
+   3:../commonEclipse/44blib.c **** #include "def.h"
+   4:../commonEclipse/44blib.c **** #include "option.h"
+   5:../commonEclipse/44blib.c **** 
+   6:../commonEclipse/44blib.c **** #include <stdarg.h>
+   7:../commonEclipse/44blib.c **** #include <string.h>
+   8:../commonEclipse/44blib.c **** #include <stdio.h>
+   9:../commonEclipse/44blib.c **** #include <ctype.h>
+  10:../commonEclipse/44blib.c **** 
+  11:../commonEclipse/44blib.c **** #define STACKSIZE    0xa00 //SVC satck size(do not use user stack)//
+  12:../commonEclipse/44blib.c **** #define HEAPEND     (_ISR_STARTADDRESS-STACKSIZE-0x500) // = 0xc7ff000//
+  13:../commonEclipse/44blib.c **** //SVC Stack Area:0xc(e)7ff000-0xc(e)7ffaff//
+  14:../commonEclipse/44blib.c **** 
+  15:../commonEclipse/44blib.c **** extern char Image_RW_Limit[];
+  16:../commonEclipse/44blib.c **** volatile unsigned char *downPt;
+  17:../commonEclipse/44blib.c **** unsigned int fileSize;
+  18:../commonEclipse/44blib.c **** void *mallocPt=Image_RW_Limit;
+  19:../commonEclipse/44blib.c **** 
+  20:../commonEclipse/44blib.c **** void (*restart)(void)=(void (*)(void))0x0;
+  21:../commonEclipse/44blib.c **** void (*run)(void)=(void (*)(void))DOWNLOAD_ADDRESS;
+  22:../commonEclipse/44blib.c **** 
+  23:../commonEclipse/44blib.c **** //--------------------------------SYSTEM---------------------------------//
+  24:../commonEclipse/44blib.c **** static int delayLoopCount=400;
+  25:../commonEclipse/44blib.c **** 
+  26:../commonEclipse/44blib.c **** void Delay(int time)
+  27:../commonEclipse/44blib.c **** // time=0: adjust the Delay function by WatchDog timer.//
+  28:../commonEclipse/44blib.c **** // time>0: the number of loop time//
+  29:../commonEclipse/44blib.c **** // 100us resolution.//
+  30:../commonEclipse/44blib.c **** {
+ 3159              		.loc 1 30 0
+ 3160              		.cfi_startproc
+ 3161              		@ Function supports interworking.
+ 3162              		@ args = 0, pretend = 0, frame = 16
+ 3163              		@ frame_needed = 1, uses_anonymous_args = 0
+ 3164 0000 00482DE9 		stmfd	sp!, {fp, lr}
+ 3165              	.LCFI0:
+ 3166              		.cfi_def_cfa_offset 8
+ 3167 0004 04B08DE2 		add	fp, sp, #4
+ 3168              		.cfi_offset 14, -4
+ 3169              		.cfi_offset 11, -8
+ 3170              	.LCFI1:
+ 3171              		.cfi_def_cfa 11, 4
+ 3172 0008 10D04DE2 		sub	sp, sp, #16
+ 3173 000c 10000BE5 		str	r0, [fp, #-16]
+  31:../commonEclipse/44blib.c **** 	int i,adjust=0;
+ 3174              		.loc 1 31 0
+ 3175 0010 0030A0E3 		mov	r3, #0
+ 3176 0014 0C300BE5 		str	r3, [fp, #-12]
+  32:../commonEclipse/44blib.c **** 	if(time==0)
+ 3177              		.loc 1 32 0
+ 3178 0018 10301BE5 		ldr	r3, [fp, #-16]
+ 3179 001c 000053E3 		cmp	r3, #0
+ 3180 0020 2100001A 		bne	.L3
+  33:../commonEclipse/44blib.c **** 	{
+  34:../commonEclipse/44blib.c **** 		time=200;
+ 3181              		.loc 1 34 0
+ 3182 0024 C830A0E3 		mov	r3, #200
+ 3183 0028 10300BE5 		str	r3, [fp, #-16]
+  35:../commonEclipse/44blib.c **** 		adjust=1;
+ 3184              		.loc 1 35 0
+ 3185 002c 0130A0E3 		mov	r3, #1
+ 3186 0030 0C300BE5 		str	r3, [fp, #-12]
+  36:../commonEclipse/44blib.c **** 		delayLoopCount=400;
+ 3187              		.loc 1 36 0
+ 3188 0034 D8309FE5 		ldr	r3, .L8
+ 3189 0038 192EA0E3 		mov	r2, #400
+ 3190 003c 002083E5 		str	r2, [r3, #0]
+  37:../commonEclipse/44blib.c **** 		rWTCON=((MCLK/1000000-1)<<8)|(2<<3);	// 1M/64,Watch-dog,nRESET,interrupt disable//
+ 3191              		.loc 1 37 0
+ 3192 0040 D0309FE5 		ldr	r3, .L8+4
+ 3193 0044 D0209FE5 		ldr	r2, .L8+8
+ 3194 0048 002083E5 		str	r2, [r3, #0]
+  38:../commonEclipse/44blib.c **** 		rWTDAT=0xffff;
+ 3195              		.loc 1 38 0
+ 3196 004c CC309FE5 		ldr	r3, .L8+12
+ 3197 0050 CC209FE5 		ldr	r2, .L8+16
+ 3198 0054 002083E5 		str	r2, [r3, #0]
+  39:../commonEclipse/44blib.c **** 		rWTCNT=0xffff;	 
+ 3199              		.loc 1 39 0
+ 3200 0058 C8309FE5 		ldr	r3, .L8+20
+ 3201 005c C0209FE5 		ldr	r2, .L8+16
+ 3202 0060 002083E5 		str	r2, [r3, #0]
+  40:../commonEclipse/44blib.c **** 		rWTCON=((MCLK/1000000-1)<<8)|(2<<3)|(1<<5); // 1M/64,Watch-dog enable,nRESET,interrupt disable //
+ 3203              		.loc 1 40 0
+ 3204 0064 AC309FE5 		ldr	r3, .L8+4
+ 3205 0068 BC209FE5 		ldr	r2, .L8+24
+ 3206 006c 002083E5 		str	r2, [r3, #0]
+  41:../commonEclipse/44blib.c **** 	}
+  42:../commonEclipse/44blib.c **** 	for(;time>0;time--)
+ 3207              		.loc 1 42 0
+ 3208 0070 0D0000EA 		b	.L3
+ 3209              	.L6:
+  43:../commonEclipse/44blib.c **** 		for(i=0;i<delayLoopCount;i++);
+ 3210              		.loc 1 43 0
+ 3211 0074 0030A0E3 		mov	r3, #0
+ 3212 0078 08300BE5 		str	r3, [fp, #-8]
+ 3213 007c 020000EA 		b	.L4
+ 3214              	.L5:
+ 3215              		.loc 1 43 0 is_stmt 0 discriminator 2
+ 3216 0080 08301BE5 		ldr	r3, [fp, #-8]
+ 3217 0084 013083E2 		add	r3, r3, #1
+ 3218 0088 08300BE5 		str	r3, [fp, #-8]
+ 3219              	.L4:
+ 3220              		.loc 1 43 0 discriminator 1
+ 3221 008c 80309FE5 		ldr	r3, .L8
+ 3222 0090 003093E5 		ldr	r3, [r3, #0]
+ 3223 0094 08201BE5 		ldr	r2, [fp, #-8]
+ 3224 0098 030052E1 		cmp	r2, r3
+ 3225 009c F7FFFFBA 		blt	.L5
+  42:../commonEclipse/44blib.c **** 	for(;time>0;time--)
+ 3226              		.loc 1 42 0 is_stmt 1
+ 3227 00a0 10301BE5 		ldr	r3, [fp, #-16]
+ 3228 00a4 013043E2 		sub	r3, r3, #1
+ 3229 00a8 10300BE5 		str	r3, [fp, #-16]
+ 3230              	.L3:
+  42:../commonEclipse/44blib.c **** 	for(;time>0;time--)
+ 3231              		.loc 1 42 0 is_stmt 0 discriminator 1
+ 3232 00ac 10301BE5 		ldr	r3, [fp, #-16]
+ 3233 00b0 000053E3 		cmp	r3, #0
+ 3234 00b4 EEFFFFCA 		bgt	.L6
+  44:../commonEclipse/44blib.c **** 	if(adjust==1)
+ 3235              		.loc 1 44 0 is_stmt 1
+ 3236 00b8 0C301BE5 		ldr	r3, [fp, #-12]
+ 3237 00bc 010053E3 		cmp	r3, #1
+ 3238 00c0 1000001A 		bne	.L1
+  45:../commonEclipse/44blib.c **** 	{
+  46:../commonEclipse/44blib.c **** 		rWTCON=((MCLK/1000000-1)<<8)|(2<<3);
+ 3239              		.loc 1 46 0
+ 3240 00c4 4C309FE5 		ldr	r3, .L8+4
+ 3241 00c8 4C209FE5 		ldr	r2, .L8+8
+ 3242 00cc 002083E5 		str	r2, [r3, #0]
+  47:../commonEclipse/44blib.c **** 		i=0xffff-rWTCNT;   //  1count/16us?????????//
+ 3243              		.loc 1 47 0
+ 3244 00d0 50309FE5 		ldr	r3, .L8+20
+ 3245 00d4 003093E5 		ldr	r3, [r3, #0]
+ 3246 00d8 FF3C63E2 		rsb	r3, r3, #65280
+ 3247 00dc FF3083E2 		add	r3, r3, #255
+ 3248 00e0 08300BE5 		str	r3, [fp, #-8]
+  48:../commonEclipse/44blib.c **** 		delayLoopCount=8000000/(i*64);	//400*100/(i*64/200)   //
+ 3249              		.loc 1 48 0
+ 3250 00e4 08301BE5 		ldr	r3, [fp, #-8]
+ 3251 00e8 0333A0E1 		mov	r3, r3, asl #6
+ 3252 00ec 3C009FE5 		ldr	r0, .L8+28
+ 3253 00f0 0310A0E1 		mov	r1, r3
+ 3254 00f4 FEFFFFEB 		bl	__aeabi_idiv
+ 3255 00f8 0030A0E1 		mov	r3, r0
+ 3256 00fc 0320A0E1 		mov	r2, r3
+ 3257 0100 0C309FE5 		ldr	r3, .L8
+ 3258 0104 002083E5 		str	r2, [r3, #0]
+ 3259              	.L1:
+  49:../commonEclipse/44blib.c **** 	}
+  50:../commonEclipse/44blib.c **** }
+ 3260              		.loc 1 50 0
+ 3261 0108 04D04BE2 		sub	sp, fp, #4
+ 3262 010c 0048BDE8 		ldmfd	sp!, {fp, lr}
+ 3263 0110 1EFF2FE1 		bx	lr
+ 3264              	.L9:
+ 3265              		.align	2
+ 3266              	.L8:
+ 3267 0114 08000000 		.word	delayLoopCount
+ 3268 0118 0000D301 		.word	30605312
+ 3269 011c 103F0000 		.word	16144
+ 3270 0120 0400D301 		.word	30605316
+ 3271 0124 FFFF0000 		.word	65535
+ 3272 0128 0800D301 		.word	30605320
+ 3273 012c 303F0000 		.word	16176
+ 3274 0130 00127A00 		.word	8000000
+ 3275              		.cfi_endproc
+ 3276              	.LFE0:
+ 3278              		.align	2
+ 3279              		.global	DelayMs
+ 3281              	DelayMs:
+ 3282              	.LFB1:
+  51:../commonEclipse/44blib.c **** 
+  52:../commonEclipse/44blib.c **** void DelayMs(int ms_time)
+  53:../commonEclipse/44blib.c **** {
+ 3283              		.loc 1 53 0
+ 3284              		.cfi_startproc
+ 3285              		@ Function supports interworking.
+ 3286              		@ args = 0, pretend = 0, frame = 16
+ 3287              		@ frame_needed = 1, uses_anonymous_args = 0
+ 3288              		@ link register save eliminated.
+ 3289 0134 04B02DE5 		str	fp, [sp, #-4]!
+ 3290              	.LCFI2:
+ 3291              		.cfi_def_cfa_offset 4
+ 3292 0138 00B08DE2 		add	fp, sp, #0
+ 3293              		.cfi_offset 11, -4
+ 3294              	.LCFI3:
+ 3295              		.cfi_def_cfa_register 11
+ 3296 013c 14D04DE2 		sub	sp, sp, #20
+ 3297 0140 10000BE5 		str	r0, [fp, #-16]
+  54:../commonEclipse/44blib.c **** 	int i;
+  55:../commonEclipse/44blib.c **** 	
+  56:../commonEclipse/44blib.c **** 	for( i = 0 ; i < 1000*ms_time ; i++ )
+ 3298              		.loc 1 56 0
+ 3299 0144 0030A0E3 		mov	r3, #0
+ 3300 0148 08300BE5 		str	r3, [fp, #-8]
+ 3301 014c 020000EA 		b	.L11
+ 3302              	.L12:
+ 3303              		.loc 1 56 0 is_stmt 0 discriminator 2
+ 3304 0150 08301BE5 		ldr	r3, [fp, #-8]
+ 3305 0154 013083E2 		add	r3, r3, #1
+ 3306 0158 08300BE5 		str	r3, [fp, #-8]
+ 3307              	.L11:
+ 3308              		.loc 1 56 0 discriminator 1
+ 3309 015c 10201BE5 		ldr	r2, [fp, #-16]
+ 3310 0160 0230A0E1 		mov	r3, r2
+ 3311 0164 8332A0E1 		mov	r3, r3, asl #5
+ 3312 0168 033062E0 		rsb	r3, r2, r3
+ 3313 016c 0331A0E1 		mov	r3, r3, asl #2
+ 3314 0170 023083E0 		add	r3, r3, r2
+ 3315 0174 8331A0E1 		mov	r3, r3, asl #3
+ 3316 0178 0320A0E1 		mov	r2, r3
+ 3317 017c 08301BE5 		ldr	r3, [fp, #-8]
+ 3318 0180 030052E1 		cmp	r2, r3
+ 3319 0184 F1FFFFCA 		bgt	.L12
+  57:../commonEclipse/44blib.c **** 		;
+  58:../commonEclipse/44blib.c **** }
+ 3320              		.loc 1 58 0 is_stmt 1
+ 3321 0188 00D08BE2 		add	sp, fp, #0
+ 3322 018c 04B09DE4 		ldmfd	sp!, {fp}
+ 3323 0190 1EFF2FE1 		bx	lr
+ 3324              		.cfi_endproc
+ 3325              	.LFE1:
+ 3327              		.align	2
+ 3328              		.global	Port_Init
+ 3330              	Port_Init:
+ 3331              	.LFB2:
+  59:../commonEclipse/44blib.c **** 
+  60:../commonEclipse/44blib.c **** //------------------------PORTS------------------------------//
+  61:../commonEclipse/44blib.c **** void Port_Init(void)
+  62:../commonEclipse/44blib.c **** {
+ 3332              		.loc 1 62 0
+ 3333              		.cfi_startproc
+ 3334              		@ Function supports interworking.
+ 3335              		@ args = 0, pretend = 0, frame = 0
+ 3336              		@ frame_needed = 1, uses_anonymous_args = 0
+ 3337              		@ link register save eliminated.
+ 3338 0194 04B02DE5 		str	fp, [sp, #-4]!
+ 3339              	.LCFI4:
+ 3340              		.cfi_def_cfa_offset 4
+ 3341 0198 00B08DE2 		add	fp, sp, #0
+ 3342              		.cfi_offset 11, -4
+ 3343              	.LCFI5:
+ 3344              		.cfi_def_cfa_register 11
+  63:../commonEclipse/44blib.c **** 	//CAUTION:Follow the configuration order for setting the ports. 
+  64:../commonEclipse/44blib.c **** 	// 1) setting value 
+  65:../commonEclipse/44blib.c **** 	// 2) setting control register 
+  66:../commonEclipse/44blib.c **** 	// 3) configure pull-up resistor.  
+  67:../commonEclipse/44blib.c **** 
+  68:../commonEclipse/44blib.c **** 	//16bit data bus configuration  
+  69:../commonEclipse/44blib.c **** 
+  70:../commonEclipse/44blib.c **** 	// PORT A GROUP
+  71:../commonEclipse/44blib.c **** 	// BIT 	9	8	7	6	5	4	3	2	1	0
+  72:../commonEclipse/44blib.c **** 	// 		A24	A23	A22	A21	A20	A19	A18	A17	A16	A0
+  73:../commonEclipse/44blib.c **** 	//		0	1	1	1	1	1	1	1	1	1
+  74:../commonEclipse/44blib.c **** 	rPCONA = 0x1ff;	
+ 3345              		.loc 1 74 0
+ 3346 019c 00319FE5 		ldr	r3, .L14
+ 3347 01a0 00219FE5 		ldr	r2, .L14+4
+ 3348 01a4 002083E5 		str	r2, [r3, #0]
+  75:../commonEclipse/44blib.c **** 
+  76:../commonEclipse/44blib.c **** 	// PORT B GROUP
+  77:../commonEclipse/44blib.c **** 	// BIT 	10		9		8		7		6		5		4		3		2		1		0
+  78:../commonEclipse/44blib.c **** 	//		/CS5	/CS4	/CS3	/CS2	/CS1	GPB5	GPB4	/SRAS	/SCAS	SCLK	SCKE
+  79:../commonEclipse/44blib.c **** 	//		EXT		NIC		USB		IDE		SMC		NC		NC		Sdram	Sdram	Sdram	Sdram
+  80:../commonEclipse/44blib.c **** 	//      1, 		1,   	1,   	1,    	1,    	0,       0,     1,    	1,    	1,   	1	
+  81:../commonEclipse/44blib.c **** 	rPDATB = 0x7ff;				
+ 3349              		.loc 1 81 0
+ 3350 01a8 FC309FE5 		ldr	r3, .L14+8
+ 3351 01ac FC209FE5 		ldr	r2, .L14+12
+ 3352 01b0 002083E5 		str	r2, [r3, #0]
+  82:../commonEclipse/44blib.c **** 	rPCONB = 0x1cf;			// P9-LED1 P10-LED2
+ 3353              		.loc 1 82 0
+ 3354 01b4 F8309FE5 		ldr	r3, .L14+16
+ 3355 01b8 F8209FE5 		ldr	r2, .L14+20
+ 3356 01bc 002083E5 		str	r2, [r3, #0]
+  83:../commonEclipse/44blib.c ****     
+  84:../commonEclipse/44blib.c **** 	// PORT C GROUP
+  85:../commonEclipse/44blib.c **** 	// BUSWIDTH=16
+  86:../commonEclipse/44blib.c **** 	//  PC15	14		13		12		11		10		9		8
+  87:../commonEclipse/44blib.c **** 	//	I		I		RXD1	TXD1	I		I		I		I
+  88:../commonEclipse/44blib.c **** 	//	NC		NC		Uart1	Uart1	NC		NC		NC		NC
+  89:../commonEclipse/44blib.c **** 	//	00		00		11		11		00		00		00		00
+  90:../commonEclipse/44blib.c **** 
+  91:../commonEclipse/44blib.c **** 	//  PC7		6		5		4		3		2		1		0
+  92:../commonEclipse/44blib.c **** 	//   I		I		I		I		I		I		I		I
+  93:../commonEclipse/44blib.c **** 	//   NC		NC		NC		NC		IISCLK	IISDI	IISDO	IISLRCK
+  94:../commonEclipse/44blib.c **** 	//   00		00		00		00		11		11		11		11
+  95:../commonEclipse/44blib.c **** 	rPDATC = 0xff00;
+ 3357              		.loc 1 95 0
+ 3358 01c0 F4309FE5 		ldr	r3, .L14+24
+ 3359 01c4 FF2CA0E3 		mov	r2, #65280
+ 3360 01c8 002083E5 		str	r2, [r3, #0]
+  96:../commonEclipse/44blib.c **** 	rPCONC = 0x0ff0ffff;	
+ 3361              		.loc 1 96 0
+ 3362 01cc EC309FE5 		ldr	r3, .L14+28
+ 3363 01d0 EC209FE5 		ldr	r2, .L14+32
+ 3364 01d4 002083E5 		str	r2, [r3, #0]
+  97:../commonEclipse/44blib.c **** 	rPUPC  = 0x30ff;	//PULL UP RESISTOR should be enabled to I/O
+ 3365              		.loc 1 97 0
+ 3366 01d8 E8309FE5 		ldr	r3, .L14+36
+ 3367 01dc E8209FE5 		ldr	r2, .L14+40
+ 3368 01e0 002083E5 		str	r2, [r3, #0]
+  98:../commonEclipse/44blib.c **** 
+  99:../commonEclipse/44blib.c **** 	// PORT D GROUP
+ 100:../commonEclipse/44blib.c **** 	// PORT D GROUP(I/O OR LCD)
+ 101:../commonEclipse/44blib.c **** 	// BIT7		6		5		4		3		2		1		0
+ 102:../commonEclipse/44blib.c **** 	//	VF		VM		VLINE	VCLK	VD3		VD2		VD1		VD0
+ 103:../commonEclipse/44blib.c **** 	//	00		00		00		00		00		00		00		00
+ 104:../commonEclipse/44blib.c **** 	rPDATD= 0xff;
+ 3369              		.loc 1 104 0
+ 3370 01e4 E4309FE5 		ldr	r3, .L14+44
+ 3371 01e8 FF20A0E3 		mov	r2, #255
+ 3372 01ec 002083E5 		str	r2, [r3, #0]
+ 105:../commonEclipse/44blib.c **** 	rPCOND= 0xaaaa;	
+ 3373              		.loc 1 105 0
+ 3374 01f0 DC309FE5 		ldr	r3, .L14+48
+ 3375 01f4 DC209FE5 		ldr	r2, .L14+52
+ 3376 01f8 002083E5 		str	r2, [r3, #0]
+ 106:../commonEclipse/44blib.c **** 	rPUPD = 0x0;
+ 3377              		.loc 1 106 0
+ 3378 01fc D8309FE5 		ldr	r3, .L14+56
+ 3379 0200 0020A0E3 		mov	r2, #0
+ 3380 0204 002083E5 		str	r2, [r3, #0]
+ 107:../commonEclipse/44blib.c **** 	// These pins must be set only after CPU's internal LCD controller is enable
+ 108:../commonEclipse/44blib.c **** 	
+ 109:../commonEclipse/44blib.c **** 	// PORT E GROUP 
+ 110:../commonEclipse/44blib.c **** 	// Bit	8		7		6		5		4		3		2		1		0
+ 111:../commonEclipse/44blib.c **** 	//  	CODECLK	LED4	LED5	LED6	LED7	BEEP	RXD0	TXD0	LcdDisp
+ 112:../commonEclipse/44blib.c **** 	//  	10		01		01		01		01		01		10		10		01
+ 113:../commonEclipse/44blib.c **** 	rPDATE	= 0x1ff;
+ 3381              		.loc 1 113 0
+ 3382 0208 D0309FE5 		ldr	r3, .L14+60
+ 3383 020c 94209FE5 		ldr	r2, .L14+4
+ 3384 0210 002083E5 		str	r2, [r3, #0]
+ 114:../commonEclipse/44blib.c **** 	rPCONE	= 0x25529;	
+ 3385              		.loc 1 114 0
+ 3386 0214 C8309FE5 		ldr	r3, .L14+64
+ 3387 0218 C8209FE5 		ldr	r2, .L14+68
+ 3388 021c 002083E5 		str	r2, [r3, #0]
+ 115:../commonEclipse/44blib.c **** 	rPUPE	= 0x6;
+ 3389              		.loc 1 115 0
+ 3390 0220 C4309FE5 		ldr	r3, .L14+72
+ 3391 0224 0620A0E3 		mov	r2, #6
+ 3392 0228 002083E5 		str	r2, [r3, #0]
+ 116:../commonEclipse/44blib.c **** 	
+ 117:../commonEclipse/44blib.c **** 	// PORT F GROUP
+ 118:../commonEclipse/44blib.c **** 	// Bit8		7		6		5		 4		3		2		1		0
+ 119:../commonEclipse/44blib.c **** 	// IISCLK	IISDI	IISDO	IISLRCK	Input	Input	Input	IICSDA	IICSCL
+ 120:../commonEclipse/44blib.c **** 	// 100		100		100		100		00		00		00		10		10
+ 121:../commonEclipse/44blib.c **** 	rPDATF = 0x0;
+ 3393              		.loc 1 121 0
+ 3394 022c BC309FE5 		ldr	r3, .L14+76
+ 3395 0230 0020A0E3 		mov	r2, #0
+ 3396 0234 002083E5 		str	r2, [r3, #0]
+ 122:../commonEclipse/44blib.c **** 	rPCONF = 0x252a;
+ 3397              		.loc 1 122 0
+ 3398 0238 B4309FE5 		ldr	r3, .L14+80
+ 3399 023c B4209FE5 		ldr	r2, .L14+84
+ 3400 0240 002083E5 		str	r2, [r3, #0]
+ 123:../commonEclipse/44blib.c **** 	rPUPF  = 0x0;
+ 3401              		.loc 1 123 0
+ 3402 0244 B0309FE5 		ldr	r3, .L14+88
+ 3403 0248 0020A0E3 		mov	r2, #0
+ 3404 024c 002083E5 		str	r2, [r3, #0]
+ 124:../commonEclipse/44blib.c **** 
+ 125:../commonEclipse/44blib.c **** 	// PORT G GROUP
+ 126:../commonEclipse/44blib.c **** 	// BIT7		6		5		4		3		2		1		0
+ 127:../commonEclipse/44blib.c **** 	// 	INT7	INT6	INT5	INT4	INT3	INT2	INT1	INT0
+ 128:../commonEclipse/44blib.c **** 	//	S3		S4		S5		S6		NIC		EXT		IDE		USB
+ 129:../commonEclipse/44blib.c **** 	//	11      11      11      11      11      11      11      11
+ 130:../commonEclipse/44blib.c **** 	rPDATG = 0xff;
+ 3405              		.loc 1 130 0
+ 3406 0250 A8309FE5 		ldr	r3, .L14+92
+ 3407 0254 FF20A0E3 		mov	r2, #255
+ 3408 0258 002083E5 		str	r2, [r3, #0]
+ 131:../commonEclipse/44blib.c **** 	rPCONG = 0xffff;
+ 3409              		.loc 1 131 0
+ 3410 025c A0309FE5 		ldr	r3, .L14+96
+ 3411 0260 A0209FE5 		ldr	r2, .L14+100
+ 3412 0264 002083E5 		str	r2, [r3, #0]
+ 132:../commonEclipse/44blib.c **** 	rPUPG  = 0x0;		//pull-up portG enabled  
+ 3413              		.loc 1 132 0
+ 3414 0268 9C309FE5 		ldr	r3, .L14+104
+ 3415 026c 0020A0E3 		mov	r2, #0
+ 3416 0270 002083E5 		str	r2, [r3, #0]
+ 133:../commonEclipse/44blib.c **** 	rSPUCR = 0x7;  		//D15-D0 pull-up disable
+ 3417              		.loc 1 133 0
+ 3418 0274 94309FE5 		ldr	r3, .L14+108
+ 3419 0278 0720A0E3 		mov	r2, #7
+ 3420 027c 002083E5 		str	r2, [r3, #0]
+ 134:../commonEclipse/44blib.c **** 
+ 135:../commonEclipse/44blib.c **** 	/* Non Cache area */
+ 136:../commonEclipse/44blib.c **** 	rNCACHBE0=((Non_Cache_End>>12)<<16)|(Non_Cache_Start>>12); 
+ 3421              		.loc 1 136 0
+ 3422 0280 8C309FE5 		ldr	r3, .L14+112
+ 3423 0284 8C209FE5 		ldr	r2, .L14+116
+ 3424 0288 002083E5 		str	r2, [r3, #0]
+ 137:../commonEclipse/44blib.c **** 
+ 138:../commonEclipse/44blib.c **** 	/* Low level default */
+ 139:../commonEclipse/44blib.c **** 	rEXTINT=0x0;
+ 3425              		.loc 1 139 0
+ 3426 028c 88309FE5 		ldr	r3, .L14+120
+ 3427 0290 0020A0E3 		mov	r2, #0
+ 3428 0294 002083E5 		str	r2, [r3, #0]
+ 140:../commonEclipse/44blib.c **** }
+ 3429              		.loc 1 140 0
+ 3430 0298 00D08BE2 		add	sp, fp, #0
+ 3431 029c 04B09DE4 		ldmfd	sp!, {fp}
+ 3432 02a0 1EFF2FE1 		bx	lr
+ 3433              	.L15:
+ 3434              		.align	2
+ 3435              	.L14:
+ 3436 02a4 0000D201 		.word	30539776
+ 3437 02a8 FF010000 		.word	511
+ 3438 02ac 0C00D201 		.word	30539788
+ 3439 02b0 FF070000 		.word	2047
+ 3440 02b4 0800D201 		.word	30539784
+ 3441 02b8 CF010000 		.word	463
+ 3442 02bc 1400D201 		.word	30539796
+ 3443 02c0 1000D201 		.word	30539792
+ 3444 02c4 FFFFF00F 		.word	267452415
+ 3445 02c8 1800D201 		.word	30539800
+ 3446 02cc FF300000 		.word	12543
+ 3447 02d0 2000D201 		.word	30539808
+ 3448 02d4 1C00D201 		.word	30539804
+ 3449 02d8 AAAA0000 		.word	43690
+ 3450 02dc 2400D201 		.word	30539812
+ 3451 02e0 2C00D201 		.word	30539820
+ 3452 02e4 2800D201 		.word	30539816
+ 3453 02e8 29550200 		.word	152873
+ 3454 02ec 3000D201 		.word	30539824
+ 3455 02f0 3800D201 		.word	30539832
+ 3456 02f4 3400D201 		.word	30539828
+ 3457 02f8 2A250000 		.word	9514
+ 3458 02fc 3C00D201 		.word	30539836
+ 3459 0300 4400D201 		.word	30539844
+ 3460 0304 4000D201 		.word	30539840
+ 3461 0308 FFFF0000 		.word	65535
+ 3462 030c 4800D201 		.word	30539848
+ 3463 0310 4C00D201 		.word	30539852
+ 3464 0314 0400C001 		.word	29360132
+ 3465 0318 002000C0 		.word	-1073733632
+ 3466 031c 5000D201 		.word	30539856
+ 3467              		.cfi_endproc
+ 3468              	.LFE2:
+ 3470              		.align	2
+ 3471              		.global	malloc
+ 3473              	malloc:
+ 3474              	.LFB3:
+ 141:../commonEclipse/44blib.c **** 
+ 142:../commonEclipse/44blib.c **** 
+ 143:../commonEclipse/44blib.c **** //--------------------------------HEAP---------------------------------//
+ 144:../commonEclipse/44blib.c **** void * malloc(unsigned nbyte) 
+ 145:../commonEclipse/44blib.c **** /*Very simple; Use malloc() & free() like Stack*/
+ 146:../commonEclipse/44blib.c **** //void *mallocPt=Image$$RW$$Limit;
+ 147:../commonEclipse/44blib.c **** {
+ 3475              		.loc 1 147 0
+ 3476              		.cfi_startproc
+ 3477              		@ Function supports interworking.
+ 3478              		@ args = 0, pretend = 0, frame = 16
+ 3479              		@ frame_needed = 1, uses_anonymous_args = 0
+ 3480              		@ link register save eliminated.
+ 3481 0320 04B02DE5 		str	fp, [sp, #-4]!
+ 3482              	.LCFI6:
+ 3483              		.cfi_def_cfa_offset 4
+ 3484 0324 00B08DE2 		add	fp, sp, #0
+ 3485              		.cfi_offset 11, -4
+ 3486              	.LCFI7:
+ 3487              		.cfi_def_cfa_register 11
+ 3488 0328 14D04DE2 		sub	sp, sp, #20
+ 3489 032c 10000BE5 		str	r0, [fp, #-16]
+ 148:../commonEclipse/44blib.c ****     void *returnPt=mallocPt;
+ 3490              		.loc 1 148 0
+ 3491 0330 7C309FE5 		ldr	r3, .L19
+ 3492 0334 003093E5 		ldr	r3, [r3, #0]
+ 3493 0338 08300BE5 		str	r3, [fp, #-8]
+ 149:../commonEclipse/44blib.c **** 
+ 150:../commonEclipse/44blib.c ****     mallocPt= (int *)mallocPt+nbyte/4+((nbyte%4)>0); //to align 4byte
+ 3494              		.loc 1 150 0
+ 3495 033c 70309FE5 		ldr	r3, .L19
+ 3496 0340 002093E5 		ldr	r2, [r3, #0]
+ 3497 0344 10301BE5 		ldr	r3, [fp, #-16]
+ 3498 0348 2311A0E1 		mov	r1, r3, lsr #2
+ 3499 034c 10301BE5 		ldr	r3, [fp, #-16]
+ 3500 0350 033003E2 		and	r3, r3, #3
+ 3501 0354 000053E3 		cmp	r3, #0
+ 3502 0358 0030A003 		moveq	r3, #0
+ 3503 035c 0130A013 		movne	r3, #1
+ 3504 0360 033081E0 		add	r3, r1, r3
+ 3505 0364 0331A0E1 		mov	r3, r3, asl #2
+ 3506 0368 032082E0 		add	r2, r2, r3
+ 3507 036c 40309FE5 		ldr	r3, .L19
+ 3508 0370 002083E5 		str	r2, [r3, #0]
+ 151:../commonEclipse/44blib.c **** 
+ 152:../commonEclipse/44blib.c ****     if( (int)mallocPt > HEAPEND )
+ 3509              		.loc 1 152 0
+ 3510 0374 38309FE5 		ldr	r3, .L19
+ 3511 0378 003093E5 		ldr	r3, [r3, #0]
+ 3512 037c 0320A0E1 		mov	r2, r3
+ 3513 0380 30309FE5 		ldr	r3, .L19+4
+ 3514 0384 030052E1 		cmp	r2, r3
+ 3515 0388 040000DA 		ble	.L17
+ 153:../commonEclipse/44blib.c ****     {
+ 154:../commonEclipse/44blib.c **** 		mallocPt=returnPt;
+ 3516              		.loc 1 154 0
+ 3517 038c 20309FE5 		ldr	r3, .L19
+ 3518 0390 08201BE5 		ldr	r2, [fp, #-8]
+ 3519 0394 002083E5 		str	r2, [r3, #0]
+ 155:../commonEclipse/44blib.c **** 		return NULL;
+ 3520              		.loc 1 155 0
+ 3521 0398 0030A0E3 		mov	r3, #0
+ 3522 039c 000000EA 		b	.L18
+ 3523              	.L17:
+ 156:../commonEclipse/44blib.c ****     }
+ 157:../commonEclipse/44blib.c ****     return returnPt;
+ 3524              		.loc 1 157 0
+ 3525 03a0 08301BE5 		ldr	r3, [fp, #-8]
+ 3526              	.L18:
+ 158:../commonEclipse/44blib.c **** }
+ 3527              		.loc 1 158 0
+ 3528 03a4 0300A0E1 		mov	r0, r3
+ 3529 03a8 00D08BE2 		add	sp, fp, #0
+ 3530 03ac 04B09DE4 		ldmfd	sp!, {fp}
+ 3531 03b0 1EFF2FE1 		bx	lr
+ 3532              	.L20:
+ 3533              		.align	2
+ 3534              	.L19:
+ 3535 03b4 00000000 		.word	mallocPt
+ 3536 03b8 00F07F0C 		.word	209711104
+ 3537              		.cfi_endproc
+ 3538              	.LFE3:
+ 3540              		.align	2
+ 3541              		.global	free
+ 3543              	free:
+ 3544              	.LFB4:
+ 159:../commonEclipse/44blib.c **** 
+ 160:../commonEclipse/44blib.c **** void free(void *pt)
+ 161:../commonEclipse/44blib.c **** {
+ 3545              		.loc 1 161 0
+ 3546              		.cfi_startproc
+ 3547              		@ Function supports interworking.
+ 3548              		@ args = 0, pretend = 0, frame = 8
+ 3549              		@ frame_needed = 1, uses_anonymous_args = 0
+ 3550              		@ link register save eliminated.
+ 3551 03bc 04B02DE5 		str	fp, [sp, #-4]!
+ 3552              	.LCFI8:
+ 3553              		.cfi_def_cfa_offset 4
+ 3554 03c0 00B08DE2 		add	fp, sp, #0
+ 3555              		.cfi_offset 11, -4
+ 3556              	.LCFI9:
+ 3557              		.cfi_def_cfa_register 11
+ 3558 03c4 0CD04DE2 		sub	sp, sp, #12
+ 3559 03c8 08000BE5 		str	r0, [fp, #-8]
+ 162:../commonEclipse/44blib.c ****     mallocPt=pt;
+ 3560              		.loc 1 162 0
+ 3561 03cc 10309FE5 		ldr	r3, .L22
+ 3562 03d0 08201BE5 		ldr	r2, [fp, #-8]
+ 3563 03d4 002083E5 		str	r2, [r3, #0]
+ 163:../commonEclipse/44blib.c **** }
+ 3564              		.loc 1 163 0
+ 3565 03d8 00D08BE2 		add	sp, fp, #0
+ 3566 03dc 04B09DE4 		ldmfd	sp!, {fp}
+ 3567 03e0 1EFF2FE1 		bx	lr
+ 3568              	.L23:
+ 3569              		.align	2
+ 3570              	.L22:
+ 3571 03e4 00000000 		.word	mallocPt
+ 3572              		.cfi_endproc
+ 3573              	.LFE4:
+ 3575              		.align	2
+ 3576              		.global	sys_init
+ 3578              	sys_init:
+ 3579              	.LFB5:
+ 164:../commonEclipse/44blib.c **** 
+ 165:../commonEclipse/44blib.c **** //--------------------------------INIT---------------------------------//
+ 166:../commonEclipse/44blib.c **** void sys_init()// Interrupt & Port
+ 167:../commonEclipse/44blib.c **** {
+ 3580              		.loc 1 167 0
+ 3581              		.cfi_startproc
+ 3582              		@ Function supports interworking.
+ 3583              		@ args = 0, pretend = 0, frame = 0
+ 3584              		@ frame_needed = 1, uses_anonymous_args = 0
+ 3585 03e8 00482DE9 		stmfd	sp!, {fp, lr}
+ 3586              	.LCFI10:
+ 3587              		.cfi_def_cfa_offset 8
+ 3588 03ec 04B08DE2 		add	fp, sp, #4
+ 3589              		.cfi_offset 14, -4
+ 3590              		.cfi_offset 11, -8
+ 3591              	.LCFI11:
+ 3592              		.cfi_def_cfa 11, 4
+ 168:../commonEclipse/44blib.c ****     /* enable interrupt */
+ 169:../commonEclipse/44blib.c **** 	rINTMOD=0x0;					//Clear activation interruption register
+ 3593              		.loc 1 169 0
+ 3594 03f0 40309FE5 		ldr	r3, .L25
+ 3595 03f4 0020A0E3 		mov	r2, #0
+ 3596 03f8 002083E5 		str	r2, [r3, #0]
+ 170:../commonEclipse/44blib.c **** 	rINTCON=0x1;					//Activate FIQ interruptions
+ 3597              		.loc 1 170 0
+ 3598 03fc 1E36A0E3 		mov	r3, #31457280
+ 3599 0400 0120A0E3 		mov	r2, #1
+ 3600 0404 002083E5 		str	r2, [r3, #0]
+ 171:../commonEclipse/44blib.c ****     rI_ISPC = 0xffffffff;			// clear all interrupt pend
+ 3601              		.loc 1 171 0
+ 3602 0408 2C309FE5 		ldr	r3, .L25+4
+ 3603 040c 0020E0E3 		mvn	r2, #0
+ 3604 0410 002083E5 		str	r2, [r3, #0]
+ 172:../commonEclipse/44blib.c **** 	rEXTINTPND = 0xf;				// clear extern interruption lines
+ 3605              		.loc 1 172 0
+ 3606 0414 24309FE5 		ldr	r3, .L25+8
+ 3607 0418 0F20A0E3 		mov	r2, #15
+ 3608 041c 002083E5 		str	r2, [r3, #0]
+ 173:../commonEclipse/44blib.c **** 	Port_Init();					//| Initial 44B0X's I/O port
+ 3609              		.loc 1 173 0
+ 3610 0420 FEFFFFEB 		bl	Port_Init
+ 174:../commonEclipse/44blib.c **** 	Delay(0);						// delay time
+ 3611              		.loc 1 174 0
+ 3612 0424 0000A0E3 		mov	r0, #0
+ 3613 0428 FEFFFFEB 		bl	Delay
+ 175:../commonEclipse/44blib.c **** }
+ 3614              		.loc 1 175 0
+ 3615 042c 04D04BE2 		sub	sp, fp, #4
+ 3616 0430 0048BDE8 		ldmfd	sp!, {fp, lr}
+ 3617 0434 1EFF2FE1 		bx	lr
+ 3618              	.L26:
+ 3619              		.align	2
+ 3620              	.L25:
+ 3621 0438 0800E001 		.word	31457288
+ 3622 043c 2400E001 		.word	31457316
+ 3623 0440 5400D201 		.word	30539860
+ 3624              		.cfi_endproc
+ 3625              	.LFE5:
+ 3627              	.Letext0:
+DEFINED SYMBOLS
+                            *ABS*:00000000 44blib.c
+                            *COM*:00000004 downPt
+                            *COM*:00000004 fileSize
+C:\Users\mario\AppData\Local\Temp\ccKOdVj1.s:3131   .data:00000000 mallocPt
+C:\Users\mario\AppData\Local\Temp\ccKOdVj1.s:3128   .data:00000000 $d
+C:\Users\mario\AppData\Local\Temp\ccKOdVj1.s:3138   .bss:00000000 restart
+C:\Users\mario\AppData\Local\Temp\ccKOdVj1.s:3135   .bss:00000000 $d
+C:\Users\mario\AppData\Local\Temp\ccKOdVj1.s:3145   .data:00000004 run
+C:\Users\mario\AppData\Local\Temp\ccKOdVj1.s:3150   .data:00000008 delayLoopCount
+C:\Users\mario\AppData\Local\Temp\ccKOdVj1.s:3154   .text:00000000 $a
+C:\Users\mario\AppData\Local\Temp\ccKOdVj1.s:3157   .text:00000000 Delay
+C:\Users\mario\AppData\Local\Temp\ccKOdVj1.s:3267   .text:00000114 $d
+C:\Users\mario\AppData\Local\Temp\ccKOdVj1.s:3278   .text:00000134 $a
+C:\Users\mario\AppData\Local\Temp\ccKOdVj1.s:3281   .text:00000134 DelayMs
+C:\Users\mario\AppData\Local\Temp\ccKOdVj1.s:3330   .text:00000194 Port_Init
+C:\Users\mario\AppData\Local\Temp\ccKOdVj1.s:3436   .text:000002a4 $d
+C:\Users\mario\AppData\Local\Temp\ccKOdVj1.s:3470   .text:00000320 $a
+C:\Users\mario\AppData\Local\Temp\ccKOdVj1.s:3473   .text:00000320 malloc
+C:\Users\mario\AppData\Local\Temp\ccKOdVj1.s:3535   .text:000003b4 $d
+C:\Users\mario\AppData\Local\Temp\ccKOdVj1.s:3540   .text:000003bc $a
+C:\Users\mario\AppData\Local\Temp\ccKOdVj1.s:3543   .text:000003bc free
+C:\Users\mario\AppData\Local\Temp\ccKOdVj1.s:3571   .text:000003e4 $d
+C:\Users\mario\AppData\Local\Temp\ccKOdVj1.s:3575   .text:000003e8 $a
+C:\Users\mario\AppData\Local\Temp\ccKOdVj1.s:3578   .text:000003e8 sys_init
+C:\Users\mario\AppData\Local\Temp\ccKOdVj1.s:3621   .text:00000438 $d
+                     .debug_frame:00000010 $d
+
+UNDEFINED SYMBOLS
+Image_RW_Limit
+__aeabi_idiv

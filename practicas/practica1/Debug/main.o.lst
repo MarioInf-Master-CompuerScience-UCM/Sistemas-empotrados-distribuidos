@@ -1,0 +1,105 @@
+   1              		.cpu arm7tdmi
+   2              		.fpu softvfp
+   3              		.eabi_attribute 20, 1
+   4              		.eabi_attribute 21, 1
+   5              		.eabi_attribute 23, 3
+   6              		.eabi_attribute 24, 1
+   7              		.eabi_attribute 25, 1
+   8              		.eabi_attribute 26, 1
+   9              		.eabi_attribute 30, 6
+  10              		.eabi_attribute 18, 4
+  11              		.file	"main.c"
+  21              	.Ltext0:
+  22              		.file 1 "../main.c"
+ 2891              		.align	2
+ 2892              		.global	Main
+ 2894              	Main:
+ 2895              	.LFB0:
+   1:../main.c     **** /*--- ficheros de cabecera ---*/
+   2:../main.c     **** #include "44blib.h"
+   3:../main.c     **** #include "44b.h"
+   4:../main.c     **** #include "stdio.h"
+   5:../main.c     **** #include "stdbool.h"
+   6:../main.c     **** 
+   7:../main.c     **** /*--- funciones externas ---*/
+   8:../main.c     **** //extern void sys_init();
+   9:../main.c     **** extern void leds_off();
+  10:../main.c     **** extern void led1_on();
+  11:../main.c     **** extern void leds_switch();
+  12:../main.c     **** extern void Eint4567_init(void);
+  13:../main.c     **** extern void button_init();
+  14:../main.c     **** extern bool pressButton1_check();
+  15:../main.c     **** extern bool pressButton2_check();
+  16:../main.c     **** extern bool pressAnyButton_check();
+  17:../main.c     **** 
+  18:../main.c     **** /*--- declaracion de funciones ---*/
+  19:../main.c     **** 
+  20:../main.c     **** 
+  21:../main.c     **** /*--- codigo de funciones ---*/
+  22:../main.c     **** void Main(void){
+ 2896              		.loc 1 22 0
+ 2897              		.cfi_startproc
+ 2898              		@ Function supports interworking.
+ 2899              		@ args = 0, pretend = 0, frame = 0
+ 2900              		@ frame_needed = 1, uses_anonymous_args = 0
+ 2901 0000 00482DE9 		stmfd	sp!, {fp, lr}
+ 2902              	.LCFI0:
+ 2903              		.cfi_def_cfa_offset 8
+ 2904 0004 04B08DE2 		add	fp, sp, #4
+ 2905              		.cfi_offset 14, -4
+ 2906              		.cfi_offset 11, -8
+ 2907              	.LCFI1:
+ 2908              		.cfi_def_cfa 11, 4
+  23:../main.c     **** 
+  24:../main.c     **** 	sys_init(); 	// Inicializacion de la placa, interrupciones y puertos
+ 2909              		.loc 1 24 0
+ 2910 0008 FEFFFFEB 		bl	sys_init
+  25:../main.c     **** 	button_init();	//Inicializamos los botones
+ 2911              		.loc 1 25 0
+ 2912 000c FEFFFFEB 		bl	button_init
+  26:../main.c     **** 	leds_off();		// Establecer valor inicial de los LEDs
+ 2913              		.loc 1 26 0
+ 2914 0010 FEFFFFEB 		bl	leds_off
+  27:../main.c     **** 	led1_on();
+ 2915              		.loc 1 27 0
+ 2916 0014 FEFFFFEB 		bl	led1_on
+  28:../main.c     **** 	Eint4567_init();
+ 2917              		.loc 1 28 0
+ 2918 0018 FEFFFFEB 		bl	Eint4567_init
+ 2919              	.L2:
+  29:../main.c     **** 
+  30:../main.c     **** 	//6.1 Hola Mundo Led
+  31:../main.c     **** /*	while (1){
+  32:../main.c     **** 		leds_switch();
+  33:../main.c     **** 		DelayMs(1000);
+  34:../main.c     **** 	}
+  35:../main.c     **** */
+  36:../main.c     **** 	//6.2.1 Entrada/Salida programada
+  37:../main.c     **** /*	while(1){
+  38:../main.c     **** 		if(pressButton1_check() || pressButton2_check() || pressAnyButton_check() ){
+  39:../main.c     **** 			leds_switch();
+  40:../main.c     **** 			DelayMs(100);
+  41:../main.c     **** 		}
+  42:../main.c     **** 	}
+  43:../main.c     **** */
+  44:../main.c     **** 	//6.2.2 Entrada/Salida con interrupciones
+  45:../main.c     **** 	while(1){
+  46:../main.c     **** 
+  47:../main.c     **** 	}
+ 2920              		.loc 1 47 0 discriminator 1
+ 2921 001c FEFFFFEA 		b	.L2
+ 2922              		.cfi_endproc
+ 2923              	.LFE0:
+ 2925              	.Letext0:
+DEFINED SYMBOLS
+                            *ABS*:00000000 main.c
+C:\Users\mario\AppData\Local\Temp\ccj8xlFI.s:2891   .text:00000000 $a
+C:\Users\mario\AppData\Local\Temp\ccj8xlFI.s:2894   .text:00000000 Main
+                     .debug_frame:00000010 $d
+
+UNDEFINED SYMBOLS
+sys_init
+button_init
+leds_off
+led1_on
+Eint4567_init
