@@ -24,7 +24,7 @@ Enlaces relevantes:
 - Contenidos prácticos:
   - [Práctica 1](practicas/practica1/)
   - [Práctica 2](practicas/practica2/)
-  - [Trabajo final práctico](practicas/trabajoFinal_practica/)
+  - [Trabajo final práctico](practicas/trabajoFinal_practica/) -- ([Repositorio original](https://github.com/MarioInf-UCM/SED_trabajoFinal))
 
 - Talleres:
   - [Taller 1 - Sistemas empotrados educativos](talleres/taller1_sistemasEmpotradosEducativos/)
