@@ -22,8 +22,9 @@ Enlaces relevantes:
   - [Trabajo final teórico](teoria/trabajoFinal_teoria/)
 
 - Contenidos prácticos:
-  - [Práctica 1](practicas/practica1/)
-  - [Práctica 2](practicas/practica2/)
+  - [Práctica 1 - Introducción](./practicas/practica1/)
+  - [Práctica 2 -  Temporizador y teclado matricial](./practicas/practica2/)
+  - [Práctica 3 - Bus I2C y memoria EEPROM](./practicas/Practica3/)
   - [Trabajo final práctico](practicas/trabajoFinal_practica/) -- ([Repositorio original](https://github.com/MarioInf-UCM/SED_trabajoFinal))
 
 - Talleres:
