@@ -1,0 +1,196 @@
+   1              		.cpu arm7tdmi
+   2              		.fpu softvfp
+   3              		.eabi_attribute 20, 1
+   4              		.eabi_attribute 21, 1
+   5              		.eabi_attribute 23, 3
+   6              		.eabi_attribute 24, 1
+   7              		.eabi_attribute 25, 1
+   8              		.eabi_attribute 26, 1
+   9              		.eabi_attribute 30, 6
+  10              		.eabi_attribute 18, 4
+  11              		.file	"timer.c"
+  21              	.Ltext0:
+  22              		.file 1 "../timer.c"
+ 1874              		.align	2
+ 1875              		.global	timer_init
+ 1877              	timer_init:
+ 1878              	.LFB0:
+   1:../timer.c    **** /*--- ficheros de cabecera ---*/
+   2:../timer.c    **** #include "44b.h"
+   3:../timer.c    **** #include "44blib.h"
+   4:../timer.c    **** /*--- funciones externas ---*/
+   5:../timer.c    **** extern void leds_switch();
+   6:../timer.c    **** extern void next_digit();
+   7:../timer.c    **** /*--- declaracion de funciones ---*/
+   8:../timer.c    **** void timer_ISR(void) __attribute__ ((interrupt ("IRQ")));
+   9:../timer.c    **** void timer_init(void);
+  10:../timer.c    **** /*--- codigo de las funciones ---*/
+  11:../timer.c    **** 
+  12:../timer.c    **** void timer_init(void)
+  13:../timer.c    **** {
+ 1879              		.loc 1 13 0
+ 1880              		.cfi_startproc
+ 1881              		@ Function supports interworking.
+ 1882              		@ args = 0, pretend = 0, frame = 0
+ 1883              		@ frame_needed = 1, uses_anonymous_args = 0
+ 1884              		@ link register save eliminated.
+ 1885 0000 04B02DE5 		str	fp, [sp, #-4]!
+ 1886              	.LCFI0:
+ 1887              		.cfi_def_cfa_offset 4
+ 1888 0004 00B08DE2 		add	fp, sp, #0
+ 1889              		.cfi_offset 11, -4
+ 1890              	.LCFI1:
+ 1891              		.cfi_def_cfa_register 11
+  14:../timer.c    **** 	/* Configuracion del controlador de interrupciones */	
+  15:../timer.c    **** 	rINTMOD=0x0;// Configurar las lineas como de tipo IRQ	
+ 1892              		.loc 1 15 0
+ 1893 0008 C0309FE5 		ldr	r3, .L2
+ 1894 000c 0020A0E3 		mov	r2, #0
+ 1895 0010 002083E5 		str	r2, [r3, #0]
+  16:../timer.c    **** 	rINTCON=0x1;// Habilitar int. vectorizadas y la linea IRQ (FIQ no)	
+ 1896              		.loc 1 16 0
+ 1897 0014 1E36A0E3 		mov	r3, #31457280
+ 1898 0018 0120A0E3 		mov	r2, #1
+ 1899 001c 002083E5 		str	r2, [r3, #0]
+  17:../timer.c    **** 	rINTMSK = rINTMSK & ~(BIT_TIMER0 | BIT_GLOBAL);// Enmascarar todas las lineas excepto Timer0 y el 
+ 1900              		.loc 1 17 0
+ 1901 0020 AC209FE5 		ldr	r2, .L2+4
+ 1902 0024 A8309FE5 		ldr	r3, .L2+4
+ 1903 0028 003093E5 		ldr	r3, [r3, #0]
+ 1904 002c 0133C3E3 		bic	r3, r3, #67108864
+ 1905 0030 023AC3E3 		bic	r3, r3, #8192
+ 1906 0034 003082E5 		str	r3, [r2, #0]
+  18:../timer.c    **** 	/* Establece la rutina de servicio para TIMER0 */
+  19:../timer.c    **** 	pISR_TIMER0=(unsigned)timer_ISR;
+ 1907              		.loc 1 19 0
+ 1908 0038 98309FE5 		ldr	r3, .L2+8
+ 1909 003c 98209FE5 		ldr	r2, .L2+12
+ 1910 0040 002083E5 		str	r2, [r3, #0]
+  20:../timer.c    **** 	/* Configurar el Timer0 (el resto de los timers se dejan a la
+  21:../timer.c    **** 	configuración por defecto) */
+  22:../timer.c    **** 	rTCFG0=0xFF;// pre-escalado = 255
+ 1911              		.loc 1 22 0
+ 1912 0044 94309FE5 		ldr	r3, .L2+16
+ 1913 0048 FF20A0E3 		mov	r2, #255
+ 1914 004c 002083E5 		str	r2, [r3, #0]
+  23:../timer.c    **** 	rTCFG1 = 0x0;//0xFFFFF0;// divisor = 1/2
+ 1915              		.loc 1 23 0
+ 1916 0050 8C309FE5 		ldr	r3, .L2+20
+ 1917 0054 0020A0E3 		mov	r2, #0
+ 1918 0058 002083E5 		str	r2, [r3, #0]
+  24:../timer.c    **** 	rTCNTB0=65535;
+ 1919              		.loc 1 24 0
+ 1920 005c 84309FE5 		ldr	r3, .L2+24
+ 1921 0060 84209FE5 		ldr	r2, .L2+28
+ 1922 0064 002083E5 		str	r2, [r3, #0]
+  25:../timer.c    **** 	rTCMPB0=12800;
+ 1923              		.loc 1 25 0
+ 1924 0068 80309FE5 		ldr	r3, .L2+32
+ 1925 006c 322CA0E3 		mov	r2, #12800
+ 1926 0070 002083E5 		str	r2, [r3, #0]
+  26:../timer.c    **** 	
+  27:../timer.c    **** 	rTCON=rTCON| (0x01<<1);// establecer manual_update
+ 1927              		.loc 1 27 0
+ 1928 0074 78309FE5 		ldr	r3, .L2+36
+ 1929 0078 74209FE5 		ldr	r2, .L2+36
+ 1930 007c 002092E5 		ldr	r2, [r2, #0]
+ 1931 0080 022082E3 		orr	r2, r2, #2
+ 1932 0084 002083E5 		str	r2, [r3, #0]
+  28:../timer.c    **** 	rTCON=rTCON & ~(0x01<<1);// DESACTIVA manual_update
+ 1933              		.loc 1 28 0
+ 1934 0088 64309FE5 		ldr	r3, .L2+36
+ 1935 008c 60209FE5 		ldr	r2, .L2+36
+ 1936 0090 002092E5 		ldr	r2, [r2, #0]
+ 1937 0094 0220C2E3 		bic	r2, r2, #2
+ 1938 0098 002083E5 		str	r2, [r3, #0]
+  29:../timer.c    **** 	rTCON=rTCON|(0x01<<3);//activar modo auto-reload
+ 1939              		.loc 1 29 0
+ 1940 009c 50309FE5 		ldr	r3, .L2+36
+ 1941 00a0 4C209FE5 		ldr	r2, .L2+36
+ 1942 00a4 002092E5 		ldr	r2, [r2, #0]
+ 1943 00a8 082082E3 		orr	r2, r2, #8
+ 1944 00ac 002083E5 		str	r2, [r3, #0]
+  30:../timer.c    **** 	rTCON=rTCON|(0x01<<0);// iniciar timer
+ 1945              		.loc 1 30 0
+ 1946 00b0 3C309FE5 		ldr	r3, .L2+36
+ 1947 00b4 38209FE5 		ldr	r2, .L2+36
+ 1948 00b8 002092E5 		ldr	r2, [r2, #0]
+ 1949 00bc 012082E3 		orr	r2, r2, #1
+ 1950 00c0 002083E5 		str	r2, [r3, #0]
+  31:../timer.c    **** }
+ 1951              		.loc 1 31 0
+ 1952 00c4 00D08BE2 		add	sp, fp, #0
+ 1953 00c8 04B09DE4 		ldmfd	sp!, {fp}
+ 1954 00cc 1EFF2FE1 		bx	lr
+ 1955              	.L3:
+ 1956              		.align	2
+ 1957              	.L2:
+ 1958 00d0 0800E001 		.word	31457288
+ 1959 00d4 0C00E001 		.word	31457292
+ 1960 00d8 54FF7F0C 		.word	209715028
+ 1961 00dc 00000000 		.word	timer_ISR
+ 1962 00e0 0000D501 		.word	30736384
+ 1963 00e4 0400D501 		.word	30736388
+ 1964 00e8 0C00D501 		.word	30736396
+ 1965 00ec FFFF0000 		.word	65535
+ 1966 00f0 1000D501 		.word	30736400
+ 1967 00f4 0800D501 		.word	30736392
+ 1968              		.cfi_endproc
+ 1969              	.LFE0:
+ 1971              		.align	2
+ 1972              		.global	timer_ISR
+ 1974              	timer_ISR:
+ 1975              	.LFB1:
+  32:../timer.c    **** 
+  33:../timer.c    **** void timer_ISR(void){
+ 1976              		.loc 1 33 0
+ 1977              		.cfi_startproc
+ 1978              		@ Interrupt Service Routine.
+ 1979              		@ args = 0, pretend = 0, frame = 0
+ 1980              		@ frame_needed = 1, uses_anonymous_args = 0
+ 1981 00f8 04E04EE2 		sub	lr, lr, #4
+ 1982 00fc 1F582DE9 		stmfd	sp!, {r0, r1, r2, r3, r4, fp, ip, lr}
+ 1983              	.LCFI2:
+ 1984              		.cfi_def_cfa_offset 32
+ 1985 0100 1CB08DE2 		add	fp, sp, #28
+ 1986              		.cfi_offset 14, -4
+ 1987              		.cfi_offset 12, -8
+ 1988              		.cfi_offset 11, -12
+ 1989              		.cfi_offset 4, -16
+ 1990              		.cfi_offset 3, -20
+ 1991              		.cfi_offset 2, -24
+ 1992              		.cfi_offset 1, -28
+ 1993              		.cfi_offset 0, -32
+ 1994              	.LCFI3:
+ 1995              		.cfi_def_cfa 11, 4
+  34:../timer.c    **** 	next_digit();
+ 1996              		.loc 1 34 0
+ 1997 0104 FEFFFFEB 		bl	next_digit
+  35:../timer.c    **** 	rI_ISPC = BIT_TIMER0;
+ 1998              		.loc 1 35 0
+ 1999 0108 0C309FE5 		ldr	r3, .L5
+ 2000 010c 022AA0E3 		mov	r2, #8192
+ 2001 0110 002083E5 		str	r2, [r3, #0]
+  36:../timer.c    **** }
+ 2002              		.loc 1 36 0
+ 2003 0114 1CD04BE2 		sub	sp, fp, #28
+ 2004 0118 1F98FDE8 		ldmfd	sp!, {r0, r1, r2, r3, r4, fp, ip, pc}^
+ 2005              	.L6:
+ 2006              		.align	2
+ 2007              	.L5:
+ 2008 011c 2400E001 		.word	31457316
+ 2009              		.cfi_endproc
+ 2010              	.LFE1:
+ 2012              	.Letext0:
+DEFINED SYMBOLS
+                            *ABS*:00000000 timer.c
+C:\Users\mario\AppData\Local\Temp\ccIHfYaL.s:1874   .text:00000000 $a
+C:\Users\mario\AppData\Local\Temp\ccIHfYaL.s:1877   .text:00000000 timer_init
+C:\Users\mario\AppData\Local\Temp\ccIHfYaL.s:1958   .text:000000d0 $d
+C:\Users\mario\AppData\Local\Temp\ccIHfYaL.s:1974   .text:000000f8 timer_ISR
+C:\Users\mario\AppData\Local\Temp\ccIHfYaL.s:1971   .text:000000f8 $a
+C:\Users\mario\AppData\Local\Temp\ccIHfYaL.s:2008   .text:0000011c $d
+                     .debug_frame:00000010 $d
+
+UNDEFINED SYMBOLS
+next_digit
